@@ -53,12 +53,15 @@ void stripQuotes(char *token)
 	size_t n = strlen(token);
 	if(n > 0 && token[0] == '"')
 	{
-		memmove(token, token + 1, n);
+		memmove(token, token + 1, n); // Shifts each character in the string to the left which removes the first quote
 		n = strlen(token);
 	}
-	if(n > 0 && token[n - 1] == '"')
+	for(int i = n; i > 0; i--) // Iterates through the string in reverse order to remove the trailing quote
 	{
-		token[n - 1] = '\0';
+		if(n > 0 && token[i] == '"')
+		{
+			token[i] = '\0';
+		}
 	}
 }
 
@@ -75,7 +78,8 @@ int parseLine(const char *lineRaw)
 	while(count < FIELD_COUNT)
 	{
 		stripQuotes(token);
-		fields[count++] = token;
+		fields[count] = token;
+		count++;
 		token = strtok(NULL, ",");
 	}
 
@@ -85,8 +89,8 @@ int parseLine(const char *lineRaw)
 		strncpy(node->data[i], fields[i], FIELD_MAX -1);
 		node->data[i][FIELD_MAX - 1] = '\0';
 	}
-	node->latInt = atoi(node->data[LAT]);
-	node->lonInt = atoi(node->data[LON]);
+	node->latInt = atoi(node->data[LAT]); // Takes the string latitude and converts it into an int
+	node->lonInt = atoi(node->data[LON]); // Takes the string longitude and converts it into an int
 	appendNode(node);
 	return 1;
 }
@@ -94,13 +98,13 @@ int parseLine(const char *lineRaw)
 void saveAirportData(FILE *airports)
 {
 	char line[LINE_MAX];
-	int count = 1;
+	int countAirport = 0; // Doesn't count the first line that contains the names of the coulumns
 	while(fgets(line, sizeof(line), airports) != NULL)
 	{
 		parseLine(line);
-		count++;
+		countAirport++;
 	}
-	printf("There are %d airports in the file\n", count);
+	printf("There are %d airports in the file\n", countAirport);
 }
 
 void freeAirportData(Node *head)
@@ -116,21 +120,22 @@ void freeAirportData(Node *head)
 void findAirports()
 {
 	int findLat, findLon;
-	char str1[16], str2[16];
+	char str1[16];
 	while(1)
 	{
 		Node *p = head;
 		int count = 1;
+
+		printf("Enter two integers for Latitude and Longitude ('stop' to quit the program)\n");
 		if(scanf("%d %d", &findLat, &findLon))
 		{
 			while(p != NULL){
 				if((findLat == p->latInt) && (findLon == p->lonInt)){
-					printf("[%d] %s, %s, %s\n", count++, p->data[AIRPORT_NAME], p->data[LAT], p->data[LON]);
+					printf("[%d] %s %s %s\n", count++, p->data[AIRPORT_NAME], p->data[LAT], p->data[LON]);
 				}
 				p = p->next;	
 			}
-		} else if(scanf("%s %s", str1, str2)){
-			
+		} else if(scanf("%s", str1)){
 			if(strcmp(str1, "stop") == 0){
 				break;
 			}
